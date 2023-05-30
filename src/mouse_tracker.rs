@@ -1,23 +1,26 @@
-use mouse_rs::Mouse;
-
 pub struct MouseTracker {
-    mouse: Mouse,
+    mouse: mouse_rs::Mouse,
     pub stats: MouseStats,
-    // sender
 }
 
 impl MouseTracker {
-    pub fn new(/*sender */) -> Self {
+    pub fn new() -> Self {
+        let mouse = mouse_rs::Mouse::new();
         MouseTracker {
-            mouse: Mouse::new(),
-            stats: MouseStats::default(),
+            // Sets the mouse_pos based on where the mouse begins, for corectness' sake
+            stats: MouseStats::new(mouse.get_position().unwrap().into()),
+            mouse,
         }
     }
     pub fn update(&mut self) {
-        let pos = self.mouse.get_position().unwrap();
-        let x = pos.x;
-        let y = pos.y;
-        self.stats.current_pos = (x, y);
+        let previous_pos = &self.stats.position;
+        let current_pos: Point = self.mouse.get_position().unwrap().into();
+        let current_distance: f64 = previous_pos.distance(&current_pos);
+
+        // Update position
+        self.stats.position = current_pos;
+        // Update distance
+        self.stats.total_distance += current_distance;
     }
 }
 
@@ -25,21 +28,43 @@ impl MouseTracker {
 
 pub struct MouseStats {
     // "persistent" TODO: Make its own struct
-    // total_distance: i32, // Total distance in pixels
-    // avg_speed: f32,      // Total average speed (excluding speed 0)
+    total_distance: f64, // Total distance in pixels
+    // avg_speed: f64,      // Total average speed (excluding speed 0)
     // "current" TODO: Make its own struct
-    current_pos: (i32, i32), // TODO: Make my own damn type
-                             // current_speed: f32,
-                             // there's room for more..
+    position: Point,
+    // current_speed: f64,
+    // there's room for more..
 }
 
-impl Default for MouseStats {
-    fn default() -> Self {
+impl MouseStats {
+    fn new(current_pos: Point) -> Self {
         MouseStats {
-            // total_distance: 0,
-            // avg_speed: 0.0,
-            current_pos: (0, 0), // todo: replace this with a new() method instead
-                                 // current_speed: 0.0,
+            position: current_pos,
+            total_distance: 0.0,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Point {
+    pub x: i32,
+    pub y: i32,
+}
+
+impl Point {
+    pub fn distance(&self, other: &Point) -> f64 {
+        // Pythagorean theorem
+        let dx = (other.x - self.x) as f64;
+        let dy = (other.y - self.y) as f64;
+        f64::sqrt(dx * dx + dy * dy)
+    }
+}
+
+impl From<mouse_rs::types::Point> for Point {
+    fn from(value: mouse_rs::types::Point) -> Self {
+        Point {
+            x: value.x,
+            y: value.y,
         }
     }
 }

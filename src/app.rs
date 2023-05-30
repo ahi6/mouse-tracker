@@ -13,7 +13,7 @@ impl eframe::App for MouseTrackerApp {
         let mouse_stats = self.mouse_tracker_receiver.recv().unwrap(); // blocking
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.label("Hello world!");
-            ui.label(format!("Mouse position: {:?}", mouse_stats))
+            ui.label(format!("Mouse position: {:#?}", mouse_stats))
         });
     }
 }
