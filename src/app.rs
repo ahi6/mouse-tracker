@@ -30,12 +30,21 @@ impl eframe::App for MouseTrackerApp {
 
 impl MouseTrackerApp {
     pub fn new(cc: &eframe::CreationContext) -> Self {
-        // TODO: Put the code block below in its own function, it's unrelated to gui
+        // Spawn tracker thread
+        let ctx = cc.egui_ctx.clone();
+        let rx = MouseTrackerApp::spawn_tracker(ctx);
 
+        // Create the app
+        MouseTrackerApp {
+            mouse_tracker_receiver: rx,
+            mouse_stats: MouseStats::default(),
+        }
+    }
+
+    fn spawn_tracker(ctx: egui::Context) -> Receiver<MouseStats> {
         // Initialize background thread to obtain mouse data in the background
         // Channel to communicate between GUI and mouse polling/tracker
         let (tx, rx): (SyncSender<MouseStats>, Receiver<MouseStats>) = sync_channel(1);
-        let ctx = cc.egui_ctx.clone();
         // Spawn bg thread that handles the mouse data
         thread::spawn(move || {
             let mut tracker = MouseTracker::new();
@@ -59,10 +68,6 @@ impl MouseTrackerApp {
             }
         });
 
-        // Create the app
-        MouseTrackerApp {
-            mouse_tracker_receiver: rx,
-            mouse_stats: MouseStats::default(),
-        }
+        rx
     }
 }
