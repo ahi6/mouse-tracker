@@ -15,12 +15,13 @@ impl MouseTracker {
     pub fn update(&mut self) {
         let previous_pos = &self.stats.position;
         let current_pos: Point = self.mouse.get_position().unwrap().into();
-        let current_distance: f64 = previous_pos.distance(&current_pos);
+        let delta = previous_pos.distance(&current_pos);
 
         // Update position
         self.stats.position = current_pos;
         // Update distance
-        self.stats.total_distance += current_distance;
+        self.stats.total_distance += delta;
+        self.stats.delta = delta;
     }
 }
 
@@ -32,8 +33,8 @@ pub struct MouseStats {
     // avg_speed: f64,      // Total average speed (excluding speed 0)
     // "current" TODO: Make its own struct
     position: Point,
-    // delta: f64, // Current "speed"
-    // there's room for more..
+    delta: f64, // Current "speed/distance"
+                // there's room for more..
 }
 
 impl MouseStats {
@@ -41,6 +42,7 @@ impl MouseStats {
         MouseStats {
             position: current_pos,
             total_distance: 0.0,
+            delta: 0.0,
         }
     }
 }
