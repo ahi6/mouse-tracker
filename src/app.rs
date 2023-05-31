@@ -1,27 +1,68 @@
-use std::sync::mpsc::Receiver;
+use std::{
+    sync::mpsc::{sync_channel, Receiver, SyncSender},
+    thread,
+    time::Duration,
+};
 
 use eframe::egui;
 
-use crate::mouse_tracker::MouseStats;
+use crate::mouse_tracker::{MouseStats, MouseTracker};
 
 pub struct MouseTrackerApp {
     mouse_tracker_receiver: Receiver<MouseStats>,
+    mouse_stats: MouseStats,
 }
 
 impl eframe::App for MouseTrackerApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let mouse_stats = self.mouse_tracker_receiver.recv().unwrap(); // blocking
+        // Try to update internal mouse_stats from bg thread
+        if let Ok(mouse_stats) = self.mouse_tracker_receiver.try_recv() {
+            self.mouse_stats = mouse_stats;
+        }
+
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.label("Hello world!");
-            ui.label(format!("Mouse position: {:#?}", mouse_stats))
+            ui.heading("text");
+            ui.label(format!("Mouse position: {:#?}", self.mouse_stats))
         });
     }
 }
 
 impl MouseTrackerApp {
-    pub fn new(rx: Receiver<MouseStats>) -> Self {
+    pub fn new(cc: &eframe::CreationContext) -> Self {
+        // TODO: Put the code block below in its own function, it's unrelated to gui
+
+        // Initialize background thread to obtain mouse data in the background
+        // Channel to communicate between GUI and mouse polling/tracker
+        let (tx, rx): (SyncSender<MouseStats>, Receiver<MouseStats>) = sync_channel(1);
+        let ctx = cc.egui_ctx.clone();
+        // Spawn bg thread that handles the mouse data
+        thread::spawn(move || {
+            let mut tracker = MouseTracker::new();
+            loop {
+                // Get the data
+                tracker.update();
+                // Send the data
+                _ = tx.try_send(tracker.stats.clone());
+                // Is window is in focus?
+                if ctx.input(|i| i.focused) {
+                    // Tell GUI to update immediately
+                    ctx.request_repaint();
+                } else {
+                    // Update eventually (after 2 secs)
+                    ctx.request_repaint_after(Duration::from_secs(2));
+                }
+
+                // Sleep
+                let dur = Duration::from_millis(120);
+                thread::sleep(dur)
+            }
+        });
+
+        // Create the app
         MouseTrackerApp {
             mouse_tracker_receiver: rx,
+            mouse_stats: MouseStats::default(),
         }
     }
 }

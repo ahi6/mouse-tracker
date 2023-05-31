@@ -24,7 +24,7 @@ impl MouseTracker {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 
 pub struct MouseStats {
     // "persistent" TODO: Make its own struct
@@ -32,7 +32,7 @@ pub struct MouseStats {
     // avg_speed: f64,      // Total average speed (excluding speed 0)
     // "current" TODO: Make its own struct
     position: Point,
-    // current_speed: f64,
+    // delta: f64, // Current "speed"
     // there's room for more..
 }
 
