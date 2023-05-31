@@ -17,11 +17,14 @@ impl MouseTracker {
         let current_pos: Point = self.mouse.get_position().unwrap().into();
         let delta = previous_pos.distance(&current_pos);
 
-        // Update position
+        // Update values
         self.stats.position = current_pos;
-        // Update distance
         self.stats.total_distance += delta;
         self.stats.delta = delta;
+        self.stats.avg_speed = self.stats.avg_speed.calculate_average(&delta);
+        if delta.is_normal() {
+            self.stats.avg_nonzero_speed = self.stats.avg_nonzero_speed.calculate_average(&delta);
+        }
     }
 }
 
@@ -29,8 +32,10 @@ impl MouseTracker {
 
 pub struct MouseStats {
     // "persistent" TODO: Make its own struct
-    total_distance: f64, // Total distance in pixels
-    // avg_speed: f64,      // Total average speed (excluding speed 0)
+    total_distance: f64,        // Total distance in pixels
+    avg_speed: Average,         // Total average speed
+    avg_nonzero_speed: Average, // Total average speed (excluding speed 0)
+    // % of time spent moving?
     // "current" TODO: Make its own struct
     position: Point,
     delta: f64, // Current "speed/distance"
@@ -43,6 +48,8 @@ impl MouseStats {
             position: current_pos,
             total_distance: 0.0,
             delta: 0.0,
+            avg_speed: Average::default(),
+            avg_nonzero_speed: Average::default(),
         }
     }
 }
@@ -67,6 +74,24 @@ impl From<mouse_rs::types::Point> for Point {
         Point {
             x: value.x,
             y: value.y,
+        }
+    }
+}
+
+// Maybe make this struct generic? if it's possible?
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Average {
+    pub average: f64, // The actual value
+    count: i32,       // How many items is this an average of
+}
+
+impl Average {
+    pub fn calculate_average(&self, new_value: &f64) -> Self {
+        let new_count = self.count + 1;
+        let new_average = (self.average * self.count as f64 + new_value) / new_count as f64;
+        Average {
+            average: new_average,
+            count: new_count,
         }
     }
 }
