@@ -19,11 +19,34 @@ impl eframe::App for MouseTrackerApp {
         if let Ok(mouse_stats) = self.mouse_tracker_receiver.try_recv() {
             self.mouse_stats = mouse_stats;
         }
+        let mouse_stats = &self.mouse_stats;
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.label("Hello world!");
-            ui.heading("text");
-            ui.label(format!("Mouse position: {:#?}", self.mouse_stats))
+            ui.heading("Mouse tracker");
+            ui.separator();
+            // Persistent stats
+            ui.label(format!(
+                "Your mouse has travelled {} pixels in total.",
+                mouse_stats.total_distance.round()
+            ));
+            ui.label(format!(
+                "Average move speed: {} px (or {} if you count idling)",
+                mouse_stats.avg_nonzero_speed, mouse_stats.avg_speed
+            ));
+            ui.separator();
+            // Volatile stats
+            ui.label("Mouse tracker is now active ☑");
+            ui.label(format!("Current mouse position: {}", mouse_stats.position));
+            ui.label(format!(
+                "Current speed (delta): {}",
+                mouse_stats.delta.round()
+            ));
+            ui.separator();
+            // Debug info
+            ui.collapsing("Debug info", |ui| {
+                ui.heading("Mouse stats:");
+                ui.code(format!("{:#?}", self.mouse_stats));
+            });
         });
     }
 }

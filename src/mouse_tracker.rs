@@ -32,14 +32,14 @@ impl MouseTracker {
 
 pub struct MouseStats {
     // "persistent" TODO: Make its own struct
-    total_distance: f64,        // Total distance in pixels
-    avg_speed: Average,         // Total average speed
-    avg_nonzero_speed: Average, // Total average speed (excluding speed 0)
+    pub total_distance: f64,        // Total distance in pixels
+    pub avg_speed: Average,         // Total average speed
+    pub avg_nonzero_speed: Average, // Total average speed (excluding speed 0)
     // % of time spent moving?
     // "current" TODO: Make its own struct
-    position: Point,
-    delta: f64, // Current "speed/distance"
-                // there's room for more..
+    pub position: Point,
+    pub delta: f64, // Current "speed/distance"
+                    // there's room for more..
 }
 
 impl MouseStats {
@@ -69,6 +69,12 @@ impl Point {
     }
 }
 
+impl std::fmt::Display for Point {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[x: {}, y: {}]", self.x, self.y)
+    }
+}
+
 impl From<mouse_rs::types::Point> for Point {
     fn from(value: mouse_rs::types::Point) -> Self {
         Point {
@@ -93,5 +99,11 @@ impl Average {
             average: new_average,
             count: new_count,
         }
+    }
+}
+
+impl std::fmt::Display for Average {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.average.round() as u16)
     }
 }
