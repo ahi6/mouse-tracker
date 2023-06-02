@@ -2,5 +2,5 @@
 
 # this script is for github actions
 
-apt install xdo
-
+echo "Running pre-build script"
+apk add --no-cache xdo
