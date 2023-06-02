@@ -1,3 +1,5 @@
+use crate::types::*;
+
 pub struct MouseTracker {
     mouse: mouse_rs::Mouse,
     pub stats: MouseStats,
@@ -31,12 +33,12 @@ impl MouseTracker {
 #[derive(Clone, Debug, Default)]
 
 pub struct MouseStats {
-    // "persistent" TODO: Make its own struct
+    // "persistent"
     pub total_distance: f64,        // Total distance in pixels
     pub avg_speed: Average,         // Total average speed
     pub avg_nonzero_speed: Average, // Total average speed (excluding speed 0)
     // % of time spent moving?
-    // "current" TODO: Make its own struct
+    // "current"
     pub position: Point,
     pub delta: f64, // Current "speed/distance"
                     // there's room for more..
@@ -51,59 +53,5 @@ impl MouseStats {
             avg_speed: Average::default(),
             avg_nonzero_speed: Average::default(),
         }
-    }
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct Point {
-    pub x: i32,
-    pub y: i32,
-}
-
-impl Point {
-    pub fn distance(&self, other: &Point) -> f64 {
-        // Pythagorean theorem
-        let dx = (other.x - self.x) as f64;
-        let dy = (other.y - self.y) as f64;
-        f64::sqrt(dx * dx + dy * dy)
-    }
-}
-
-impl std::fmt::Display for Point {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "[x: {}, y: {}]", self.x, self.y)
-    }
-}
-
-impl From<mouse_rs::types::Point> for Point {
-    fn from(value: mouse_rs::types::Point) -> Self {
-        Point {
-            x: value.x,
-            y: value.y,
-        }
-    }
-}
-
-// Maybe make this struct generic? if it's possible?
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Average {
-    pub average: f64, // The actual value
-    count: i32,       // How many items is this an average of
-}
-
-impl Average {
-    pub fn calculate_average(&self, new_value: &f64) -> Self {
-        let new_count = self.count + 1;
-        let new_average = (self.average * self.count as f64 + new_value) / new_count as f64;
-        Average {
-            average: new_average,
-            count: new_count,
-        }
-    }
-}
-
-impl std::fmt::Display for Average {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.average.round() as u16)
     }
 }

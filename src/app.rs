@@ -35,7 +35,7 @@ impl eframe::App for MouseTrackerApp {
             ));
             ui.separator();
             // Volatile stats
-            ui.label("Mouse tracker is now active ☑");
+            ui.label("Mouse tracker is active ☑");
             ui.label(format!("Current mouse position: {}", mouse_stats.position));
             ui.label(format!(
                 "Current speed (delta): {}",
