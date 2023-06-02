@@ -7,7 +7,6 @@ description = "A program for tracking your mouse"
 readme = "README.md"
 repository = "https://github.com/ahi6/mouse-tracker/"
 license = "EUPL-1.2"
-license-file = "LICENSE"
 publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
