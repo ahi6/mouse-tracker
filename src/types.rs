@@ -1,4 +1,4 @@
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct Point {
     pub x: i32,
     pub y: i32,
@@ -27,7 +27,7 @@ impl From<mouse_rs::types::Point> for Point {
         }
     }
 }
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, serde::Deserialize, serde::Serialize)]
 pub struct Average {
     pub average: f64, // The actual value
     count: i32,       // How many items is this an average of
