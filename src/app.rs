@@ -13,18 +13,17 @@ pub struct MouseTrackerApp {
     mouse_stats: MouseStats,
 }
 
-// todo: add reset stats button
 impl eframe::App for MouseTrackerApp {
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         eframe::set_value(storage, eframe::APP_KEY, &self.mouse_stats);
     }
 
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         // Try to update internal mouse_stats from bg thread
         if let Ok(mouse_stats) = self.mouse_tracker_receiver.try_recv() {
             self.mouse_stats = mouse_stats;
         }
-        let mouse_stats = &self.mouse_stats;
+        let mouse_stats = self.mouse_stats.clone();
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Mouse tracker");
@@ -47,8 +46,15 @@ impl eframe::App for MouseTrackerApp {
                 mouse_stats.delta.round()
             ));
             ui.separator();
-            // Debug info
-            ui.collapsing("Debug info", |ui| {
+            // Debug
+            ui.collapsing("Debug", |ui| {
+                if ui
+                    .button("Reset persistent data (closes the app)")
+                    .clicked()
+                {
+                    self.mouse_stats = MouseStats::default();
+                    frame.close();
+                }
                 ui.heading("Mouse stats:");
                 ui.code(format!("{:#?}", self.mouse_stats));
             });
