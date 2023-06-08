@@ -1,6 +1,6 @@
 [package]
 name = "mouse-stats"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["ahi6"]
 description = "A program for tracking your mouse"
@@ -12,5 +12,11 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-eframe = "0.22.0"
+# gui lib
+eframe = {version = "0.22.0", features = [
+    "persistence",
+]}
+# serialization (persistence)
+serde = { version = "1.0", features = ["derive"] }
+# mouse api
 mouse-rs = "0.4.2"

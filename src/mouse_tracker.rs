@@ -6,13 +6,9 @@ pub struct MouseTracker {
 }
 
 impl MouseTracker {
-    pub fn new() -> Self {
+    pub fn new(stats: MouseStats) -> Self {
         let mouse = mouse_rs::Mouse::new();
-        MouseTracker {
-            // Sets the mouse_pos based on where the mouse begins, for corectness' sake
-            stats: MouseStats::new(mouse.get_position().unwrap().into()),
-            mouse,
-        }
+        MouseTracker { stats, mouse }
     }
     pub fn update(&mut self) {
         let previous_pos = &self.stats.position;
@@ -30,8 +26,8 @@ impl MouseTracker {
     }
 }
 
-#[derive(Clone, Debug, Default)]
-
+#[derive(Clone, Debug, Default, serde::Deserialize, serde::Serialize)]
+#[serde(default)]
 pub struct MouseStats {
     // "persistent"
     pub total_distance: f64,        // Total distance in pixels
@@ -42,16 +38,4 @@ pub struct MouseStats {
     pub position: Point,
     pub delta: f64, // Current "speed/distance"
                     // there's room for more..
-}
-
-impl MouseStats {
-    fn new(current_pos: Point) -> Self {
-        MouseStats {
-            position: current_pos,
-            total_distance: 0.0,
-            delta: 0.0,
-            avg_speed: Average::default(),
-            avg_nonzero_speed: Average::default(),
-        }
-    }
 }

@@ -14,12 +14,16 @@ pub struct MouseTrackerApp {
 }
 
 impl eframe::App for MouseTrackerApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        eframe::set_value(storage, eframe::APP_KEY, &self.mouse_stats);
+    }
+
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         // Try to update internal mouse_stats from bg thread
         if let Ok(mouse_stats) = self.mouse_tracker_receiver.try_recv() {
             self.mouse_stats = mouse_stats;
         }
-        let mouse_stats = &self.mouse_stats;
+        let mouse_stats = self.mouse_stats.clone();
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Mouse tracker");
@@ -42,8 +46,15 @@ impl eframe::App for MouseTrackerApp {
                 mouse_stats.delta.round()
             ));
             ui.separator();
-            // Debug info
-            ui.collapsing("Debug info", |ui| {
+            // Debug
+            ui.collapsing("Debug", |ui| {
+                if ui
+                    .button("Reset persistent data (closes the app)")
+                    .clicked()
+                {
+                    self.mouse_stats = MouseStats::default();
+                    frame.close();
+                }
                 ui.heading("Mouse stats:");
                 ui.code(format!("{:#?}", self.mouse_stats));
             });
@@ -53,24 +64,33 @@ impl eframe::App for MouseTrackerApp {
 
 impl MouseTrackerApp {
     pub fn new(cc: &eframe::CreationContext) -> Self {
+        // Retrieve stats from persistent memory
+        let mouse_stats: MouseStats = {
+            if let Some(storage) = cc.storage {
+                eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default()
+            } else {
+                Default::default()
+            }
+        };
+
         // Spawn tracker thread
         let ctx = cc.egui_ctx.clone();
-        let rx = MouseTrackerApp::spawn_tracker(ctx);
+        let rx = MouseTrackerApp::spawn_tracker(ctx, mouse_stats.clone());
 
         // Create the app
         MouseTrackerApp {
             mouse_tracker_receiver: rx,
-            mouse_stats: MouseStats::default(),
+            mouse_stats,
         }
     }
 
-    fn spawn_tracker(ctx: egui::Context) -> Receiver<MouseStats> {
+    fn spawn_tracker(ctx: egui::Context, stats: MouseStats) -> Receiver<MouseStats> {
         // Initialize background thread to obtain mouse data in the background
         // Channel to communicate between GUI and mouse polling/tracker
         let (tx, rx): (SyncSender<MouseStats>, Receiver<MouseStats>) = sync_channel(1);
         // Spawn bg thread that handles the mouse data
         thread::spawn(move || {
-            let mut tracker = MouseTracker::new();
+            let mut tracker = MouseTracker::new(stats);
             loop {
                 // Get the data
                 tracker.update();
